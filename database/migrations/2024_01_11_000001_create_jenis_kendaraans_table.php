@@ -12,6 +12,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('name');
             $table->text('desc')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

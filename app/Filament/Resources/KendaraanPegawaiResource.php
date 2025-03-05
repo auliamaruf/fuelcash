@@ -17,6 +17,7 @@ class KendaraanPegawaiResource extends Resource
     protected static ?string $navigationLabel = 'Kendaraan Pegawai';
     protected static ?string $modelLabel = 'Kendaraan Pegawai';
     protected static ?string $pluralModelLabel = 'Kendaraan Pegawai';
+    protected static ?string $navigationGroup = 'Master Data';
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
@@ -39,12 +40,30 @@ class KendaraanPegawaiResource extends Resource
                     ->maxLength(255)
                     ->label('Plat Nomor')
                     ->placeholder('Contoh: B 1234 ABC'),
+                Forms\Components\Toggle::make('is_active')
+                    ->label('Status Aktif')
+                    ->default(true),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->headerActions([
+                Tables\Actions\Action::make('exportPDF')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->action(function () {
+                        $records = KendaraanPegawai::all();
+                        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.kendaraan.report-kendaraan-pegawai', [
+                            'records' => $records,
+                            'date' => now()->format('d/m/Y'),
+                        ]);
+                        return response()->streamDownload(function () use ($pdf) {
+                            echo $pdf->stream();
+                        }, 'laporan-kendaraan-pegawai.pdf');
+                    })
+            ])
             ->columns([
                 Tables\Columns\TextColumn::make('jenisKendaraan.name')
                     ->sortable()
@@ -58,6 +77,11 @@ class KendaraanPegawaiResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->label('Plat Nomor'),
+                Tables\Columns\IconColumn::make('is_active')
+                    ->boolean()
+                    ->sortable()
+                    ->label('Status Aktif')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -65,10 +89,20 @@ class KendaraanPegawaiResource extends Resource
                     ->label('Dibuat'),
             ])
             ->filters([
-                //
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label('Status Aktif')
+                    ->placeholder('Semua Status')
+                    ->trueLabel('Aktif')
+                    ->falseLabel('Tidak Aktif'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('toggle')
+                    ->label(fn ($record) => $record->is_active ? 'Nonaktifkan' : 'Aktifkan')
+                    ->icon(fn ($record) => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                    ->color(fn ($record) => $record->is_active ? 'danger' : 'success')
+                    ->action(fn ($record) => $record->update(['is_active' => !$record->is_active]))
+                    ->requiresConfirmation(),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
