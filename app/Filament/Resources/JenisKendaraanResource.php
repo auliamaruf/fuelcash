@@ -18,6 +18,7 @@ class JenisKendaraanResource extends Resource
     protected static ?string $modelLabel = 'Jenis Kendaraan';
     protected static ?string $pluralModelLabel = 'Jenis Kendaraan';
     protected static ?string $navigationGroup = 'Master Data';
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
@@ -39,6 +40,21 @@ class JenisKendaraanResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->headerActions([
+                Tables\Actions\Action::make('exportPDF')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->action(function () {
+                        $records = JenisKendaraan::all();
+                        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.kendaraan.report-jenis-kendaraan', [
+                            'records' => $records,
+                            'date' => now()->format('d/m/Y'),
+                        ]);
+                        return response()->streamDownload(function () use ($pdf) {
+                            echo $pdf->stream();
+                        }, 'laporan-jenis-kendaraan.pdf');
+                    })
+            ])
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()

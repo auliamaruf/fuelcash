@@ -49,6 +49,21 @@ class KendaraanPegawaiResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->headerActions([
+                Tables\Actions\Action::make('exportPDF')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->action(function () {
+                        $records = KendaraanPegawai::all();
+                        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.kendaraan.report-kendaraan-pegawai', [
+                            'records' => $records,
+                            'date' => now()->format('d/m/Y'),
+                        ]);
+                        return response()->streamDownload(function () use ($pdf) {
+                            echo $pdf->stream();
+                        }, 'laporan-kendaraan-pegawai.pdf');
+                    })
+            ])
             ->columns([
                 Tables\Columns\TextColumn::make('jenisKendaraan.name')
                     ->sortable()

@@ -18,6 +18,11 @@ class MasterFuelResource extends Resource
     protected static ?string $model = MasterFuel::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Master Data';
+    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationLabel = 'Master Bahan Bakar';
+    protected static ?string $modelLabel = 'Master Bahan Bakar';
+    protected static ?string $pluralModelLabel = 'Master Bahan Bakar';
 
     public static function form(Form $form): Form
     {
@@ -50,6 +55,21 @@ class MasterFuelResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->headerActions([
+                Tables\Actions\Action::make('exportPDF')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->action(function () {
+                        $records = MasterFuel::all();
+                        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.fuel.report-master-fuel', [
+                            'records' => $records,
+                            'date' => now()->format('d/m/Y'),
+                        ]);
+                        return response()->streamDownload(function () use ($pdf) {
+                            echo $pdf->stream();
+                        }, 'laporan-master-bahan-bakar.pdf');
+                    })
+            ])
             ->columns([
                 Tables\Columns\TextColumn::make('uuid')
                     ->label('UUID')
