@@ -13,6 +13,7 @@ return new class extends Migration
             $table->uuid('id_jenis_kendaraan');
             $table->string('nama_pemilik');
             $table->string('plat_nomor')->unique();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
 
             $table->foreign('id_jenis_kendaraan')
