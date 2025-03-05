@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             BlogPostsTableSeeder::class,
             MasterFuelSeeder::class,
             FuelSeeder::class,
+            JenisKendaraanSeeder::class,
+            KendaraanPegawaiSeeder::class,
         ]);
 
         Artisan::call('shield:generate --all');
